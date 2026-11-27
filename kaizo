@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}"
+qsbin=$(command -v qs || command -v quickshell || true)
+[[ -n "$qsbin" ]] || { echo 'Quickshell is not installed' >&2; exit 1; }
+call() { "$qsbin" -c sleepyshell ipc call "$@"; }
+ready() { call kaizo ready >/dev/null 2>&1; }
+start() {
+    if ready; then echo 'Kaizo is already running'; return; fi
+    "$qsbin" -c sleepyshell -d
+    for ((i=0;i<30;i++)); do ready && return 0; sleep .2; done
+    echo 'Kaizo did not become ready; run kaizo logs' >&2; return 1
+}
+case "${1:-help}" in
+    start) start;;
+    stop) if ready; then call kaizo quitShell; fi;;
+    restart|reload) if ready; then call kaizo quitShell; for ((i=0;i<20;i++)); do ready || break; sleep .2; done; fi; start;;
+    status) if ready; then echo 'Kaizo running (SleepyShell engine)'; else echo 'Kaizo not running'; exit 1; fi;;
+    run) exec "$qsbin" -c sleepyshell;;
+    logs) exec "$qsbin" log -c sleepyshell;;
+    search|launcher) call kaizo search;;
+    settings) call sleepybar toggle settings;;
+    monitors|displays|keybinds)
+        target=display; [[ "$1" != keybinds ]] || target=keybinds
+        settings="$cfg/quickshell/sleepyshell/sleepysettings.qml"
+        if ! "$qsbin" -p "$settings" ipc call sleepysettings tab "$target" >/dev/null 2>&1; then
+            call sleepybar toggle settings
+            for ((i=0;i<30;i++)); do
+                if "$qsbin" -p "$settings" ipc call sleepysettings tab "$target" >/dev/null 2>&1; then exit 0; fi
+                sleep .2
+            done
+            echo 'Open the requested tab in Kaizo Settings' >&2; exit 1
+        fi;;
+    controls) call sleepybar toggle clock;;
+    notifications|calendar|wallpaper) call sleepybar toggle "$1";;
+    power) call sleepybar toggle session;;
+    lock) call sleepybar sleepylock;;
+    version) echo 'Kaizo Shell / SleepyShell-base preview 0.3.0-dev';;
+    doctor)
+        echo 'Kaizo / SleepyShell base'
+        hyprctl version
+        "$qsbin" --version
+        readlink "$cfg/quickshell/sleepyshell" || true
+        if ready; then echo 'IPC: ready'; else echo 'IPC: unavailable'; fi;;
+    *) printf '%s\n' 'Kaizo: start stop restart reload run status logs search settings monitors keybinds controls notifications calendar wallpaper power lock doctor version';;
+esac

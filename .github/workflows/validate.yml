@@ -1,0 +1,24 @@
+name: Validate migration
+on:
+  push:
+    branches: [sleepyshell-base]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash -n bootstrap.sh install.sh kaizo
+      - run: python3 -m py_compile patch.py
+      - name: Verify pinned upstream and patch twice
+        run: |
+          git init /tmp/engine
+          git -C /tmp/engine fetch --depth=1 https://github.com/nninkovic95/sleepyshell.git c87dfb8c8a4dd6972a0b35188ddbb553ad0669b5
+          git -C /tmp/engine checkout --detach FETCH_HEAD
+          python3 patch.py /tmp/engine --check
+          python3 patch.py /tmp/engine
+          python3 patch.py /tmp/engine
+          python3 -m py_compile /tmp/engine/tools/install.py
+          git -C /tmp/engine diff --check
