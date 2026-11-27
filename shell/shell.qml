@@ -28,6 +28,11 @@ ShellRoot {
     function action(args) { Quickshell.execDetached(args) }
     function change(k,v) { action([cli,"config",k,typeof v === "string" ? v : JSON.stringify(v)]) }
     function toggle(p, screenName) {
+        if (["settings","studio","monitors","extensions"].includes(p)) {
+            page = ""
+            settingsWindow.openSection(p === "settings" ? "appearance" : p)
+            return
+        }
         let target = screenName || (Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : (Quickshell.screens.length ? Quickshell.screens[0].name : ""))
         if (page === p && displayName === target) page = ""
         else { displayName = target; page = p }
@@ -86,6 +91,7 @@ ShellRoot {
             }
         }
     }
+    SettingsWindow { id: settingsWindow; host: shell }
     IpcHandler {
         target: "kaizo"
         function launcher(): void { shell.toggle("launcher", "") }
