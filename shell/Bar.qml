@@ -85,6 +85,7 @@ PanelWindow {
                 }
             } }
     Component { id:inboxWidget; Pill { host: bar.host; compact: true; text: host.cfg.dnd ? "DND" : "Inbox " + host.notices.length; onClicked: host.toggle("notifications",bar.screen.name) } }
-    Component { id:soundWidget; Pill { host: bar.host; compact: true; text: {const a=Pipewire.defaultAudioSink;return a && a.audio ? (a.audio.muted ? "Mute" : Math.round(a.audio.volume*100)+"%") : "Sound"}; onClicked: host.toggle("controls",bar.screen.name) } }
+    Component { id:soundWidget; Pill { host: bar.host; compact: true; text: {const a=Pipewire.defaultAudioSink;return a && a.audio ? (a.audio.muted ? "Mute" : Math.round(a.audio.volume*100)+"%") : "Sound"}
+        onClicked: host.toggle("controls",bar.screen.name) } }
     Component { id:powerWidget; Pill { host: bar.host; compact: true; text: "⏻"; onClicked: host.toggle("power",bar.screen.name) } }
 }
