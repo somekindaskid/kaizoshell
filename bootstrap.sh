@@ -22,7 +22,7 @@ work=$(mktemp -d); trap 'rm -rf -- "$work"' EXIT
 cd "$work"
 if [[ "$source_mode" == true ]]; then
   # Pin the initial source release to the reviewed commit.
-  commit=9c9be23d4cd465fb8eca8f640ffb29b3926234a9
+  commit=e2d221f224d27c9fdfe5d46ed6077f74f55d546e
   command -v tar >/dev/null || { echo 'Missing: tar' >&2; exit 1; }
   if ! command -v go >/dev/null; then
     if command -v pacman >/dev/null && [[ " ${args[*]} " == *" --deps "* ]]; then
