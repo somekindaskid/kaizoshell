@@ -145,11 +145,13 @@ func integrate(mode string)error{
   for _,b:=range binds{if searchBind(b){if ownSearchBind(b){own=true}else{other=true}}}
   // A previously managed binding needs to be written again after stripping.
   hadManagedBind:=clean!=old&&strings.Contains(old, "kaizo search")
-  conflict=other&&mode!="replace"
-  add:=!conflict&&(!own||hadManagedBind||mode=="replace")
+  // Keep an explicitly chosen replacement on later updates.
+  replace:=mode=="replace"||(hadManagedBind&&(strings.Contains(old,"hl.unbind(\"SUPER + space\")")||strings.Contains(old,"unbind = SUPER, SPACE")))
+  conflict=other&&!replace
+  add:=!conflict&&(!own||hadManagedBind||replace)
   expectedBind=!conflict
   if next!=""&&!strings.HasSuffix(next,"\n"){next+="\n"}
-  next+=integrationBlock(filepath.Ext(p)==".lua",add,mode=="replace")
+  next+=integrationBlock(filepath.Ext(p)==".lua",add,replace)
  }
  if next==old{
   if conflict{fmt.Println("Super+Space is already assigned. Use Settings to replace it.")}
