@@ -22,7 +22,7 @@ ShellRoot {
     property color fg: light ? "#171a22" : "#e7eaf4"
     property color muted: light ? "#505a70" : "#a2acc2"
     property color accent: cfg.accent || "#b7c5ff"
-    property color onAccent: "#181c2e"
+    property color accentText: "#181c2e"
     property string cli: Quickshell.env("HOME") + "/.local/bin/kaizo"
     property string configHome: Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"
     function action(args) { Quickshell.execDetached(args) }
