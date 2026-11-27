@@ -1,0 +1,62 @@
+name: Build and release
+on:
+  push:
+    branches: [main]
+    tags: ['v*', 'nightly-*']
+  workflow_dispatch:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          cache: false
+      - run: go test -race ./... && go vet ./...
+      - run: bash -n install.sh bootstrap.sh tests/smoke.sh
+      - name: Build release assets
+        run: |
+          mkdir dist
+          for arch in amd64 arm64; do
+            CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath -o "dist/kaizo-linux-$arch" .
+          done
+          (cd dist; sha256sum kaizo-linux-* > SHA256SUMS)
+          git archive --format=tar.gz --prefix=kaizo-shell/ HEAD > dist/kaizo-shell-source.tar.gz
+          cp bootstrap.sh dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaizo-release
+          path: dist/
+  publish:
+    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: kaizo-release
+          path: dist
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          flags=()
+          if [[ "$REF_TYPE" == branch ]]; then
+            TAG=v0.2.0-alpha.1
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "Initial release already published; use a new tag for subsequent releases."
+              exit 0
+            fi
+            flags+=(--target "$GITHUB_SHA")
+          else
+            flags+=(--verify-tag)
+          fi
+          if [[ "$TAG" == *-* ]]; then flags+=(--prerelease); fi
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes "${flags[@]}" dist/*

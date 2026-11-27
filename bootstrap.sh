@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Kaizo Shell remote installer. Review before running.
+# Standalone remote installer. Review before executing.
 set -euo pipefail
 [[ $EUID != 0 ]] || { echo 'Run as your normal desktop user.' >&2; exit 1; }
 repo=somekindaskid/kaizoshell
