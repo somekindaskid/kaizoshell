@@ -12,7 +12,7 @@ PanelWindow {
     required property var status
     anchors { top: host.cfg.position !== "bottom"; bottom: host.cfg.position === "bottom"; left: true; right: true }
     implicitHeight: host.cfg.barHeight || 44
-    visible: !host.cfg.gaming
+    visible: !host.cfg.gaming && (!host.cfg.primaryBarOnly || (bar.screen && bar.screen.name === host.primaryBarScreen()))
     color: "transparent"
     Rectangle {
         anchors.fill: parent

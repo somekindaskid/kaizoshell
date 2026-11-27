@@ -37,14 +37,14 @@ ColumnLayout {
         onExited: if(root.pending!=="") debounce.restart()
     }
     Timer { id: debounce; interval: 220; onTriggered: root.refresh() }
-    Text { text: "Find anything."; color: host.fg; font.pixelSize: 30; font.weight: Font.DemiBold }
+    Text { text: "Search Kaizo"; color: host.fg; font.pixelSize: 30; font.weight: Font.DemiBold }
     RowLayout {
         Repeater { model: ["Apps","Files","Calc","Clipboard"]; Pill { required property string modelData; host: root.host; compact: true; text: modelData; selected: root.mode===modelData; onClicked: {root.mode=modelData;root.refresh();search.forceActiveFocus()} } }
     }
     TextField {
-        id: search; Layout.fillWidth: true; placeholderText: root.mode==="Calc"?"2 * (10 + 5)":root.mode==="Files"?"Search your files…":"Search…"; color: host.fg; placeholderTextColor: host.muted; font.pixelSize: 16; padding: 14
+        id: search; Layout.fillWidth: true; placeholderText: root.mode==="Calc"?"2 * (10 + 5)":root.mode==="Files"?"Search your files…":root.mode==="Clipboard"?"Search clipboard…":"Search applications…"; color: host.fg; placeholderTextColor: host.muted; font.pixelSize: 16; padding: 14
         background: Rectangle { color: host.surface; radius: 16 }
-        Component.onCompleted: forceActiveFocus()
+        Component.onCompleted: Qt.callLater(() => search.forceActiveFocus())
         onTextChanged: {list.currentIndex=0;debounce.restart()}
         Keys.onDownPressed: list.incrementCurrentIndex()
         Keys.onUpPressed: list.decrementCurrentIndex()
@@ -65,5 +65,5 @@ ColumnLayout {
             MouseArea { anchors.fill: parent; hoverEnabled: true; onEntered: list.currentIndex=index; onClicked:root.launch(modelData) }
         }
     }
-    Text { text: list.count+" results · ↑ ↓ navigate · Enter select"; color: host.muted; font.pixelSize: 11 }
+    Text { text: list.count+" results · ↑ ↓ navigate · Enter select · Esc close"; color: host.muted; font.pixelSize: 11 }
 }

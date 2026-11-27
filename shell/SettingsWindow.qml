@@ -314,6 +314,18 @@ Window {
                 SettingSwitch { setting:"showIsland"; label:"Kaizo Island"; detail:"Floating media controls."; defaultValue:true }
                 SettingSwitch { setting:"clock24"; label:"24-hour clock"; defaultValue:true }
                 Pill { host:root.host; text:"Open widget studio"; onClicked:root.section="studio" }
+                Heading { text:"Search shortcut" }
+                Description { text:"Use Super + Space to open Kaizo search. Configure the shortcut in Hyprland using the matching syntax below; remove any conflicting binding first." }
+                TextArea {
+                    Layout.fillWidth:true
+                    readOnly:true
+                    selectByMouse:true
+                    wrapMode:TextEdit.Wrap
+                    color:root.host.fg
+                    font.family:"monospace"
+                    text:"Lua:\nhl.bind(\"SUPER + space\", hl.dsp.exec_cmd(os.getenv(\"HOME\") .. \"/.local/bin/kaizo search\"))\n\nLegacy:\nbind = SUPER, SPACE, exec, ~/.local/bin/kaizo search"
+                }
+                Pill { host:root.host; text:"Open search"; onClicked:{root.close();root.host.toggle("launcher","")} }
             }
         }
     }

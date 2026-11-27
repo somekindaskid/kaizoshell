@@ -27,13 +27,29 @@ ShellRoot {
     property string configHome: Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"
     function action(args) { Quickshell.execDetached(args) }
     function change(k,v) { action([cli,"config",k,typeof v === "string" ? v : JSON.stringify(v)]) }
+    // Prefer a saved connected display for keyboard-invoked shell panels.
+    function preferredScreen() {
+        const screens = Quickshell.screens
+        const preferred = cfg.primaryMonitor || ""
+        if (preferred && screens.some(s => s.name === preferred)) return preferred
+        const focused = Hyprland.focusedMonitor
+        if (focused && screens.some(s => s.name === focused.name)) return focused.name
+        return screens.length ? screens[0].name : ""
+    }
+    function primaryBarScreen() {
+        const screens = Quickshell.screens
+        const preferred = cfg.primaryMonitor || ""
+        if (preferred && screens.some(s => s.name === preferred)) return preferred
+        return screens.length ? screens[0].name : ""
+    }
     function toggle(p, screenName) {
         if (["settings","studio","monitors","extensions"].includes(p)) {
             page = ""
             settingsWindow.openSection(p === "settings" ? "appearance" : p)
             return
         }
-        let target = screenName || (Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : (Quickshell.screens.length ? Quickshell.screens[0].name : ""))
+        if (p === "launcher" && page === "launcher" && !screenName) { page = ""; return }
+        let target = screenName || preferredScreen()
         if (page === p && displayName === target) page = ""
         else { displayName = target; page = p }
     }

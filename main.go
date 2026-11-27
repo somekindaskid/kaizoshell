@@ -74,7 +74,7 @@ func atomic(p string, b []byte, m fs.FileMode) error {
 	return os.Rename(f.Name(), p)
 }
 func defaults() map[string]any {
-	return map[string]any{"theme": "dark", "accent": "#b7c5ff", "position": "top", "barHeight": 44, "showTray": true, "showStats": true, "showDock": true, "showNotifications": true, "dnd": false, "gaming": false, "wallpaper": "", "profile": "full", "clock24": true, "dynamicColor": false, "showIsland": true, "onboarded": false, "clipboardHistory": false, "widgetOrder": []string{"clock", "stats", "tray", "inbox", "sound", "power"}, "widgets": []string{}, "pinned": []string{"org.mozilla.firefox", "org.kde.dolphin", "org.gnome.Nautilus"}}
+	return map[string]any{"theme": "dark", "accent": "#b7c5ff", "position": "top", "primaryMonitor": "", "primaryBarOnly": false, "barHeight": 44, "showTray": true, "showStats": true, "showDock": true, "showNotifications": true, "dnd": false, "gaming": false, "wallpaper": "", "profile": "full", "clock24": true, "dynamicColor": false, "showIsland": true, "onboarded": false, "clipboardHistory": false, "widgetOrder": []string{"clock", "stats", "tray", "inbox", "sound", "power"}, "widgets": []string{}, "pinned": []string{"org.mozilla.firefox", "org.kde.dolphin", "org.gnome.Nautilus"}}
 }
 func load() (map[string]any, error) {
 	c := defaults()
@@ -138,8 +138,12 @@ func validate(k string, v any) error {
 				return nil
 			}
 		}
-	case "dynamicColor", "showIsland", "onboarded", "clipboardHistory", "showTray", "showStats", "showDock", "showNotifications", "dnd", "gaming", "clock24":
+	case "primaryBarOnly", "dynamicColor", "showIsland", "onboarded", "clipboardHistory", "showTray", "showStats", "showDock", "showNotifications", "dnd", "gaming", "clock24":
 		if _, ok := v.(bool); ok {
+			return nil
+		}
+	case "primaryMonitor":
+		if s, ok := v.(string); ok && len(s) <= 128 && !strings.ContainsAny(s, "\n\r\x00/") {
 			return nil
 		}
 	case "wallpaper":
@@ -166,7 +170,7 @@ func validate(k string, v any) error {
 func set(k, s string) error {
 	var v any
 	switch k {
-	case "theme", "position", "accent", "wallpaper", "profile":
+	case "theme", "position", "accent", "wallpaper", "profile", "primaryMonitor":
 		v = s
 	default:
 		if e := json.Unmarshal([]byte(s), &v); e != nil {
@@ -528,7 +532,7 @@ install [--yes] [--deps]  Install embedded shell and CLI
 setup                    Interactive maintenance menu
 deps                     Install Arch dependencies
 start | stop | restart | reload | run | status | logs
-launcher | controls | notifications | settings | calendar | power
+launcher | search | controls | notifications | settings | calendar | power
 config [KEY VALUE]       Show or change JSON settings
 theme dark|light         profile full|minimal|work|gaming
 gamemode toggle          lock             wallpaper /absolute/path
@@ -614,6 +618,8 @@ func command(a []string) error {
 		return run("journalctl", "--user", "-u", unit, "-n", "100", "--no-pager")
 	case "reload":
 		return systemctl("restart", unit)
+	case "search":
+		return ipc("launcher")
 	case "launcher", "controls", "notifications", "settings", "calendar", "power", "onboarding", "monitors", "studio", "extensions":
 		return ipc(a[0])
 	case "config":
@@ -702,11 +708,12 @@ func command(a []string) error {
 	case "autostart":
 		fmt.Print(`Legacy hyprland.conf (review existing bindings first):
 exec-once = ~/.local/bin/kaizo start
-bind = SUPER, SPACE, exec, ~/.local/bin/kaizo launcher
+bind = SUPER, SPACE, exec, ~/.local/bin/kaizo search
 bind = SUPER, N, exec, ~/.local/bin/kaizo notifications
 bind = SUPER, L, exec, ~/.local/bin/kaizo lock
 bind = SUPER SHIFT, G, exec, ~/.local/bin/kaizo gamemode toggle
-For Lua-based Hyprland configurations, use equivalent exec and keybind calls per your installed Hyprland version.
+Lua-based Hyprland (replace conflicting binding if present):
+hl.bind("SUPER + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/kaizo search"))
 `)
 	default:
 		return fmt.Errorf("unknown command: %s", a[0])

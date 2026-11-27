@@ -13,8 +13,8 @@ PanelWindow {
     readonly property bool panelOpen: host.page !== "" && targetScreen !== null && targetScreen !== undefined && host.displayName === targetScreen.name
     visible: panelOpen
     anchors { top: true; right: host.page !== "launcher"; left: false }
-    margins { top: host.cfg.position === "bottom" ? 12 : (host.cfg.barHeight || 44)+8; right: 12 }
-    implicitWidth: Math.min(host.page === "launcher" ? 600 : 440, targetScreen ? targetScreen.width-24 : 440)
+    margins { top: host.page === "launcher" && targetScreen ? Math.max(12, Math.round(targetScreen.height * 0.12)) : host.cfg.position === "bottom" ? 12 : (host.cfg.barHeight || 44)+8; right: host.page === "launcher" ? 0 : 12 }
+    implicitWidth: Math.max(1, Math.min(host.page === "launcher" ? 720 : 440, targetScreen ? targetScreen.width-24 : 440))
     implicitHeight: Math.min(host.page === "launcher" ? 530 : 600, targetScreen ? targetScreen.height-100 : 600)
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
