@@ -13,7 +13,7 @@ Button {
         text: b.text
         font.pixelSize: b.compact ? 12 : 14
         font.weight: Font.Medium
-        color: b.selected ? b.host.onAccent : b.host.fg
+        color: b.selected ? b.host.accentText : b.host.fg
         opacity: b.enabled ? 1 : 0.45
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
