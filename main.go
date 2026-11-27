@@ -350,7 +350,7 @@ func install(args []string) error {
 			return fmt.Errorf("unknown install option %s", a)
 		}
 	}
-	fmt.Println("KAIZO /", version, "\nUser-only installation; existing Hyprland config stays untouched.")
+	fmt.Println("KAIZO /", version, "\nUser-only installation; Hyprland integration uses a backed-up managed block.")
 	if !yes && !ask("Install or update Kaizo?") {
 		return errors.New("cancelled")
 	}
@@ -424,7 +424,19 @@ func install(args []string) error {
 			fmt.Println("Warning: user systemd not available; use kaizo run.")
 		}
 	}
-	fmt.Println("Installed:", binPath(), "\nRun kaizo start from Hyprland. See kaizo autostart for configuration snippets.")
+	fmt.Println("Installed:", binPath())
+	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" && os.Getenv("WAYLAND_DISPLAY") != "" {
+		if e = integrate("enable"); e != nil {
+			fmt.Println("Warning: Hyprland integration:", e)
+		}
+		if e = start(); e != nil {
+			fmt.Println("Warning: Kaizo startup:", e)
+		} else {
+			_ = systemctl("restart", unit)
+		}
+	} else {
+		fmt.Println("Run kaizo start from Hyprland; use kaizo integration enable to configure shortcuts and startup.")
+	}
 	return nil
 }
 func qs() string {
@@ -473,6 +485,9 @@ func rollback() error {
 func uninstall() error {
 	if !ask("Remove Kaizo shell and CLI? Config and backups will be preserved.") {
 		return errors.New("cancelled")
+	}
+	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" {
+		if e := integrate("remove"); e != nil { return fmt.Errorf("remove integration first: %w", e) }
 	}
 	p, e := managedLink()
 	if e != nil {
@@ -545,6 +560,7 @@ palette [IMAGE] | calc EXPR | files QUERY
 clipboard list|copy|clear | monitor list|apply|confirm|revert
 extension list|install FILE|remove ID | widget-order JSON
 rollback                 Switch to previous shell release, then restart
+integration enable|replace|remove|status
 uninstall | doctor | autostart | version | help`)
 }
 func configLock() (func(), error) {
@@ -567,7 +583,7 @@ func command(a []string) error {
 		return nil
 	}
 	switch a[0] {
-	case "config", "theme", "wallpaper", "profile", "gamemode", "restore", "reset", "install", "repair", "rollback", "uninstall", "extension", "palette", "channel", "widget-order":
+	case "config", "theme", "wallpaper", "profile", "gamemode", "restore", "reset", "install", "repair", "rollback", "uninstall", "extension", "palette", "channel", "widget-order", "integration":
 		unlock, e := configLock()
 		if e != nil {
 			return e
@@ -705,6 +721,9 @@ func command(a []string) error {
 		return uninstall()
 	case "doctor":
 		return doctor()
+	case "integration":
+		if len(a) != 2 { return errors.New("usage: kaizo integration enable|replace|remove|status") }
+		return integrate(a[1])
 	case "autostart":
 		fmt.Print(`Legacy hyprland.conf (review existing bindings first):
 exec-once = ~/.local/bin/kaizo start

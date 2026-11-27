@@ -101,3 +101,7 @@ bash tests/smoke.sh
 ```
 
 See `docs/STATUS.md` for limitations. Live testing on Arch with Quickshell, Hyprland, PipeWire, notification D-Bus ownership, actual monitors and lock authentication is required before a stable release.
+
+### Automatic Hyprland integration
+
+Installation from a running Hyprland session adds a backed-up managed startup and Super+Space block, reloads and checks the config, and starts Kaizo. Existing conflicting shortcuts are preserved unless explicitly replaced in Settings > Desktop & bar. Use `kaizo integration enable|replace|remove|status`. Symlinked or ambiguous configs are not edited. If validation fails, the original config is restored. Backups are under the XDG state directory in `kaizo/hyprland-backups`.

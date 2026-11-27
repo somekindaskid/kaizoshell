@@ -315,15 +315,23 @@ Window {
                 SettingSwitch { setting:"clock24"; label:"24-hour clock"; defaultValue:true }
                 Pill { host:root.host; text:"Open widget studio"; onClicked:root.section="studio" }
                 Heading { text:"Search shortcut" }
-                Description { text:"Use Super + Space to open Kaizo search. Configure the shortcut in Hyprland using the matching syntax below; remove any conflicting binding first." }
-                TextArea {
+                Description { text:"Kaizo automatically configures Super + Space and startup during installation. Existing shortcuts are preserved unless you choose to replace them." }
+                Flow {
                     Layout.fillWidth:true
-                    readOnly:true
-                    selectByMouse:true
-                    wrapMode:TextEdit.Wrap
-                    color:root.host.fg
-                    font.family:"monospace"
-                    text:"Lua:\nhl.bind(\"SUPER + space\", hl.dsp.exec_cmd(os.getenv(\"HOME\") .. \"/.local/bin/kaizo search\"))\n\nLegacy:\nbind = SUPER, SPACE, exec, ~/.local/bin/kaizo search"
+                    spacing:8
+                    Pill { host:root.host; text:"Enable integration"; enabled:!job.running; onClicked:root.execute(["integration","enable"]) }
+                    Pill { host:root.host; text:"Replace Super + Space"; enabled:!job.running; onClicked:replaceDialog.open() }
+                    Pill { host:root.host; text:"Remove integration"; enabled:!job.running; onClicked:root.execute(["integration","remove"]) }
+                    Pill { host:root.host; text:"Check status"; enabled:!job.running; onClicked:root.execute(["integration","status"]) }
+                }
+                Description { text:root.resultText }
+                Dialog {
+                    id:replaceDialog
+                    title:"Use Super + Space for Kaizo?"
+                    modal:true
+                    standardButtons:Dialog.Ok | Dialog.Cancel
+                    onAccepted:root.execute(["integration","replace"])
+                    contentItem:Text { text:"Kaizo will override the existing shortcut in its removable configuration block. Your original binding is preserved on disk."; wrapMode:Text.Wrap; color:root.host.fg; implicitWidth:300 }
                 }
                 Pill { host:root.host; text:"Open search"; onClicked:{root.close();root.host.toggle("launcher","")} }
             }
