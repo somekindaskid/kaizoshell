@@ -10,9 +10,11 @@ PanelWindow {
     required property var host
     required property date now
     required property var status
+    required property var targetScreen
+    screen: targetScreen
     anchors { top: host.cfg.position !== "bottom"; bottom: host.cfg.position === "bottom"; left: true; right: true }
     implicitHeight: host.cfg.barHeight || 44
-    visible: !host.cfg.gaming && (!host.cfg.primaryBarOnly || (bar.screen && bar.screen.name === host.primaryBarScreen()))
+    visible: !host.cfg.gaming && (!host.cfg.primaryBarOnly || (targetScreen && targetScreen.name === host.primaryBarScreen()))
     color: "transparent"
     Rectangle {
         anchors.fill: parent

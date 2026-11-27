@@ -98,7 +98,7 @@ ShellRoot {
         delegate: Component {
             Scope {
                 id: monitorGroup; required property var modelData
-                Bar { host: shell; screen: monitorGroup.modelData; now: clock.date; status: stats }
+                Bar { host: shell; targetScreen: monitorGroup.modelData; now: clock.date; status: stats }
                 Desktop { host: shell; screen: monitorGroup.modelData }
                 Overlay { host: shell; targetScreen: monitorGroup.modelData; now: clock.date; status: stats }
                 Dock { host: shell; screen: monitorGroup.modelData }
