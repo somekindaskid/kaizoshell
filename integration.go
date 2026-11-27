@@ -15,6 +15,30 @@ import (
 const integrationBegin = "KAIZO MANAGED INTEGRATION BEGIN"
 const integrationEnd = "KAIZO MANAGED INTEGRATION END"
 
+// Query the running compositor rather than guessing from the existence of files.
+func parseConfigProvider(raw []byte) string {
+ var data map[string]any
+ if json.Unmarshal(raw,&data)==nil {
+  if v,ok:=data["configProvider"].(string);ok {
+   switch strings.ToLower(strings.TrimSpace(v)){case "lua":return "lua";case "hyprlang":return "hyprlang"}
+  }
+ }
+ for _,line:=range strings.Split(string(raw),"\n"){
+  k,v,ok:=strings.Cut(line,":")
+  if !ok||!strings.EqualFold(strings.TrimSpace(k),"configProvider"){continue}
+  switch strings.ToLower(strings.TrimSpace(v)){case "lua":return "lua";case "hyprlang":return "hyprlang"}
+ }
+ return ""
+}
+func activeConfigProvider() string {
+ for _,args:=range [][]string{{"-j","status"},{"status"}}{
+  if raw,e:=exec.Command("hyprctl",args...).Output();e==nil{
+   if p:=parseConfigProvider(raw);p!=""{return p}
+  }
+ }
+ return ""
+}
+
 func integrationPath() (string,error) {
  // An explicitly selected compositor config is safer than guessing.
  sig:=os.Getenv("HYPRLAND_INSTANCE_SIGNATURE")
@@ -41,7 +65,14 @@ func integrationPath() (string,error) {
  }
  dir:=filepath.Join(xdg("XDG_CONFIG_HOME",".config"),"hypr")
  lua,legacy:=filepath.Join(dir,"hyprland.lua"),filepath.Join(dir,"hyprland.conf")
- if exists(lua)&&exists(legacy) {return "",errors.New("both Hyprland configuration formats exist; automatic integration skipped")}
+ if exists(lua)&&exists(legacy) {
+  provider:=activeConfigProvider()
+  switch provider {
+  case "lua":return safeIntegrationPath(lua)
+  case "hyprlang":return safeIntegrationPath(legacy)
+  default:return "",errors.New("both config files exist and active provider could not be determined; run hyprctl status")
+  }
+ }
  if exists(lua){return safeIntegrationPath(lua)}
  return safeIntegrationPath(legacy)
 }

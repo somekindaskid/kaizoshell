@@ -15,3 +15,16 @@ func TestSearchBindRecognition(t *testing.T){
  if !searchBind(desktopBind{Modmask:64,Key:"space"})||searchBind(desktopBind{Modmask:65,Key:"space"})||searchBind(desktopBind{Modmask:64,Key:"space",Submap:"resize"}){t.Fatal("incorrect shortcut detection")}
  if !ownSearchBind(desktopBind{Arg:"$HOME/.local/bin/kaizo search"})||ownSearchBind(desktopBind{Arg:"wofi"}){t.Fatal("incorrect ownership")}
 }
+
+func TestParseConfigProvider(t *testing.T){
+ for _,tc:=range []struct{raw,want string}{
+  {`{"configProvider":"lua"}`,"lua"},
+  {`{"configProvider":"hyprlang"}`,"hyprlang"},
+  {"backend: drm\nconfigProvider: lua\n","lua"},
+  {"configProvider: hyprlang","hyprlang"},
+  {"unknown request",""},
+  {`{"configProvider":"unknown"}`,""},
+ }{
+  if got:=parseConfigProvider([]byte(tc.raw));got!=tc.want{t.Fatalf("provider %q: got %q want %q",tc.raw,got,tc.want)}
+ }
+}
