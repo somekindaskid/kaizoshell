@@ -4,10 +4,12 @@ set -euo pipefail
 [[ $EUID != 0 ]] || { echo 'Run as your normal desktop user.' >&2; exit 1; }
 repo=somekindaskid/kaizoshell
 channel=beta
+source_mode=false
 args=()
 while (($#)); do
   case $1 in
     --channel) shift; channel=${1:?Missing channel};;
+    --source) source_mode=true;;
     --deps|--yes) args+=("$1");;
     *) echo "Unknown option: $1" >&2; exit 1;;
   esac
@@ -18,6 +20,25 @@ for c in curl python3 sha256sum; do command -v "$c" >/dev/null || { echo "Missin
 case $(uname -m) in x86_64) arch=amd64;; aarch64) arch=arm64;; *) echo 'Unsupported architecture' >&2; exit 1;; esac
 work=$(mktemp -d); trap 'rm -rf -- "$work"' EXIT
 cd "$work"
+if [[ "$source_mode" == true ]]; then
+  # Pin the initial source release to the reviewed commit.
+  commit=9c9be23d4cd465fb8eca8f640ffb29b3926234a9
+  command -v tar >/dev/null || { echo 'Missing: tar' >&2; exit 1; }
+  if ! command -v go >/dev/null; then
+    if command -v pacman >/dev/null && [[ " ${args[*]} " == *" --deps "* ]]; then
+      sudo pacman -S --needed go </dev/tty
+    else
+      echo 'Go is required for source installation. On Arch: sudo pacman -S go' >&2
+      exit 1
+    fi
+  fi
+  curl --proto '=https' --tlsv1.2 -fsSL --retry 2 --max-time 120 "https://codeload.github.com/$repo/tar.gz/$commit" -o source.tar.gz
+  mkdir src
+  tar -xzf source.tar.gz --strip-components=1 -C src
+  if [[ -t 0 ]]; then bash src/install.sh "${args[@]}"; else bash src/install.sh "${args[@]}" </dev/tty; fi
+  "$HOME/.local/bin/kaizo" channel "$channel"
+  exit 0
+fi
 curl --proto '=https' --tlsv1.2 -fsSL --retry 2 --max-time 60 "https://api.github.com/repos/$repo/releases?per_page=100" > releases.json
 python3 - "$channel" "$arch" "$repo" <<'PY' > urls
 import json,sys
