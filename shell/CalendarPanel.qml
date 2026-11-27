@@ -24,7 +24,7 @@ ColumnLayout {
                 property date day: new Date(root.month.getFullYear(),root.month.getMonth(),index-((root.month.getDay()+6)%7)+1)
                 property bool today: day.toDateString()===root.now.toDateString()
                 Layout.fillWidth: true; Layout.preferredHeight: 35; radius: 12; color: today ? host.accent : host.surface
-                Text { anchors.centerIn: parent; text:parent.day.getDate();color:parent.today?host.onAccent:parent.day.getMonth()===root.month.getMonth()?host.fg:host.muted;opacity:parent.day.getMonth()===root.month.getMonth()?1:0.4 }
+                Text { anchors.centerIn: parent; text:parent.day.getDate();color:parent.today?host.accentText:parent.day.getMonth()===root.month.getMonth()?host.fg:host.muted;opacity:parent.day.getMonth()===root.month.getMonth()?1:0.4 }
             }
         }
     }
