@@ -79,7 +79,7 @@ ShellRoot {
                 id: monitorGroup; required property var modelData
                 Bar { host: shell; screen: monitorGroup.modelData; now: clock.date; status: stats }
                 Desktop { host: shell; screen: monitorGroup.modelData }
-                Overlay { host: shell; screen: monitorGroup.modelData; now: clock.date; status: stats }
+                Overlay { host: shell; targetScreen: monitorGroup.modelData; now: clock.date; status: stats }
                 Dock { host: shell; screen: monitorGroup.modelData }
                 Toast { host: shell; screen: monitorGroup.modelData }
                 Island { host: shell; screen: monitorGroup.modelData }

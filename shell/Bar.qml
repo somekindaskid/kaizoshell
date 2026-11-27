@@ -66,7 +66,7 @@ PanelWindow {
     }
 
     Component { id:clockWidget; Pill { host: bar.host; compact: true; text: Qt.formatDateTime(bar.now,host.cfg.clock24 === false ? "ddd · h:mm AP" : "ddd · HH:mm"); onClicked: host.toggle("calendar",bar.screen.name) } }
-    Component { id:statsWidget; Text { visible: host.cfg.showStats !== false && bar.width > 1250; text: status.summary; color: host.muted; font.pixelSize: 11 } }
+    Component { id:statsWidget; Text { visible: host.cfg.showStats !== false && bar.width > 1250; text: bar.status ? (bar.status.summary || "System") : "System"; color: host.muted; font.pixelSize: 11 } }
     Component { id:trayWidget; Row {
                 visible: host.cfg.showTray !== false && bar.width > 850
                 spacing: 4

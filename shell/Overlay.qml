@@ -8,14 +8,17 @@ PanelWindow {
     required property var host
     required property date now
     required property var status
-    visible: host.page !== "" && host.displayName === screen.name
+    required property var targetScreen
+    screen: targetScreen
+    readonly property bool panelOpen: host.page !== "" && targetScreen !== null && targetScreen !== undefined && host.displayName === targetScreen.name
+    visible: panelOpen
     anchors { top: true; right: host.page !== "launcher"; left: false }
     margins { top: host.cfg.position === "bottom" ? 12 : (host.cfg.barHeight || 44)+8; right: 12 }
-    implicitWidth: Math.min(host.page === "launcher" ? 600 : 440, screen ? screen.width-24 : 440)
-    implicitHeight: Math.min(host.page === "launcher" ? 530 : 600, screen ? screen.height-100 : 600)
+    implicitWidth: Math.min(host.page === "launcher" ? 600 : 440, targetScreen ? targetScreen.width-24 : 440)
+    implicitHeight: Math.min(host.page === "launcher" ? 530 : 600, targetScreen ? targetScreen.height-100 : 600)
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: !visible ? WlrKeyboardFocus.None : host.page === "launcher" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
+    WlrLayershell.keyboardFocus: !win.panelOpen ? WlrKeyboardFocus.None : host.page === "launcher" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
     color: "transparent"
     Rectangle {
         anchors.fill: parent; radius: 26; color: host.bg; border.color: host.raised
@@ -29,10 +32,10 @@ PanelWindow {
             Loader {
                 id: loader
                 Layout.fillWidth: true; Layout.fillHeight: true
-                sourceComponent: !win.visible ? null : host.page === "launcher" ? launcher : host.page === "controls" ? controls : host.page === "notifications" ? notifications : host.page === "settings" ? settings : host.page === "calendar" ? calendar : host.page === "onboarding" ? onboarding : host.page === "studio" ? studio : host.page === "monitors" ? monitors : host.page === "extensions" ? extensions : power
+                sourceComponent: !win.panelOpen ? null : host.page === "launcher" ? launcher : host.page === "controls" ? controls : host.page === "notifications" ? notifications : host.page === "settings" ? settings : host.page === "calendar" ? calendar : host.page === "onboarding" ? onboarding : host.page === "studio" ? studio : host.page === "monitors" ? monitors : host.page === "extensions" ? extensions : power
             }
         }
-        Shortcut { sequence: "Escape"; enabled: win.visible; onActivated: host.page="" }
+        Shortcut { sequence: "Escape"; enabled: win.panelOpen; onActivated: host.page="" }
     }
     Component { id: launcher; Launcher { host: win.host } }
     Component { id: controls; Controls { host: win.host; status: win.status } }
